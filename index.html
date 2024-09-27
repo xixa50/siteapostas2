@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registo de Apostas</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .container {
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 800px;
+            width: 100%;
+            margin-bottom: 40px;
+        }
+
+        .form-container {
+            margin-bottom: 20px;
+        }
+
+        .form-container h3 {
+            color: #007BFF;
+            margin-bottom: 10px;
+        }
+
+        label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        input, select, button {
+            padding: 10px;
+            margin: 10px 0;
+            width: 100%;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+            color: #333;
+        }
+
+        th {
+            background-color: #007BFF;
+            color: white;
+        }
+
+        .chart-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Registo de Apostas</h1>
+
+    <div class="container">
+        <div class="form-container">
+            <h3>Adicionar Aposta</h3>
+            <form id="betForm">
+                <label for="betValue">Valor Apostado (€):</label>
+                <input type="number" id="betValue" placeholder="Ex: 50" required>
+                
+                <label for="odd">Odd:</label>
+                <input type="number" id="odd" step="0.01" placeholder="Ex: 2.50" required>
+                
+                <label for="result">Resultado:</label>
+                <select id="result">
+                    <option value="win">Vitória</option>
+                    <option value="loss">Derrota</option>
+                </select>
+
+                <button type="submit">Adicionar Aposta</button>
+            </form>
+        </div>
+
+        <div class="table-container">
+            <h3>Histórico de Apostas</h3>
+            <table id="betsTable">
+                <thead>
+                    <tr>
+                        <th>Valor Apostado (€)</th>
+                        <th>Odd</th>
+                        <th>Possíveis Ganhos (€)</th>
+                        <th>Resultado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- As apostas aparecerão aqui -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="container chart-container">
+        <h3>Evolução das Apostas</h3>
+        <canvas id="balanceChart"></canvas>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const betForm = document.getElementById('betForm');
+        const betsTable = document.querySelector('#betsTable tbody');
+        const balanceChart = document.getElementById('balanceChart').getContext('2d');
+
+        let balanceData = [0];  // Inicialmente o saldo é 0
+        let chartLabels = ['Início'];  // Rótulos do gráfico
+
+        const myChart = new Chart(balanceChart, {
+            type: 'line',
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    label: 'Saldo (€)',
+                    data: balanceData,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2,
+                    fill: false
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        betForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const betValue = parseFloat(document.getElementById('betValue').value);
+            const odd = parseFloat(document.getElementById('odd').value);
+            const result = document.getElementById('result').value;
+
+            const possibleWin = betValue * odd;
+
+            let resultText = result === 'win' ? 'Vitória' : 'Derrota';
+
+            let row = betsTable.insertRow();
+            row.insertCell(0).textContent = betValue.toFixed(2);
+            row.insertCell(1).textContent = odd.toFixed(2);
+            row.insertCell(2).textContent = possibleWin.toFixed(2);
+            row.insertCell(3).textContent = resultText;
+
+            // Atualizar o saldo
+            let currentBalance = balanceData[balanceData.length - 1];
+            if (result === 'win') {
+                currentBalance += possibleWin - betValue;
+            } else {
+                currentBalance -= betValue;
+            }
+            balanceData.push(currentBalance);
+
+            // Atualizar o gráfico
+            chartLabels.push(`Aposta ${balanceData.length - 1}`);
+            myChart.update();
+        });
+    </script>
+</body>
+</html>
